@@ -1,0 +1,335 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <clocale>
+
+
+
+//function to copy a whole file to one string
+char *filetostring(char *filename)
+{
+    FILE *file=fopen(filename, "r");
+
+    if (file==NULL)
+    {
+        return NULL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long int filesize=ftell(file);
+    rewind(file);
+    char *content=(char *)calloc(filesize+1, 1);
+    fread(content, 1, filesize, file);
+
+	fclose(file);
+
+    return content;
+}
+
+
+
+void main()
+{
+	setlocale(LC_ALL, "Russian");
+
+	//creating file to copy a comments-less code to
+	FILE *fopen(
+		const char *filename,
+		const char *mode
+		);
+	FILE *resultcode;
+	resultcode=fopen("resultcode.txt", "w+");
+
+	//copying source code from file to string
+	char *sourcestr;
+	sourcestr=filetostring("jic1-cpp.txt");
+
+	//dealing with comments
+	int state=0; //   0-code, 1-inside//comment, 2-inside/*comment
+	char *resultstr;
+	int j=0;
+
+	while (j<strlen(sourcestr))
+	{
+		switch (state) 
+		{
+		//   /=47
+		case 0:
+			if (sourcestr[j]==47)
+			{
+				if (sourcestr[j+1]==47)
+				{
+					state=1;
+					j=j+2;
+				}
+				if (sourcestr[j+1]==42)
+				{
+					state=2;
+					j=j+2;
+				}
+			}
+			else
+			{
+				fputc(sourcestr[j], resultcode);
+				j++;
+			}
+			break;
+		// new string=10
+		case 1:
+			if (sourcestr[j]==10)
+			{
+					state=0;
+					fputc(sourcestr[j], resultcode);
+					fputc(sourcestr[j+1], resultcode);
+					j=j+2;
+			}
+			else
+				j++;
+			break;
+		//   /=47, *=42
+		case 2:
+			if (sourcestr[j]==42)
+			{
+				if (sourcestr[j+1]==47)
+				{
+					state=0;
+					j=j+2;
+				}
+			}
+			else
+				j++;
+			break;
+		} //end of switch
+	} //end of while
+	
+	int fclose(
+		FILE *resultcode
+		);
+
+	resultstr=filetostring("resultcode.txt");
+
+	printf("Комментарии в коде были удалены\n");
+		
+
+
+	//counting operators
+	int i=0;
+	int CLabs=0;
+	int allops=0; 
+
+	while (i<strlen(resultstr))
+	{
+		//ignoring everything in ""
+		if (resultstr[i]==34) // ""
+		{
+			do 
+			{	i++;	}
+			while (resultstr[i]!=34);
+		}
+		//counting all operators
+		if ( (((resultstr[i]==60) && (resultstr[i+1]==60)) && (resultstr[i+2]==61)) // <<=
+			|| (((resultstr[i]==62) && (resultstr[i+1]==62)) && (resultstr[i+2]==61)) // >>=
+			|| (((resultstr[i]==45) && (resultstr[i+1]==62)) && (resultstr[i+2]==42)) // ->*
+			|| ((resultstr[i]==110) && (resultstr[i+1]==101) && (resultstr[i+2]==119)) // new
+			)
+		{
+			allops++;
+			i=i+3;
+			continue;
+		}
+		if ( ((resultstr[i]==61) && (resultstr[i+1]==61)) // ==
+			|| ((resultstr[i]==43) && (resultstr[i+1]==43)) // ++ 
+			|| ((resultstr[i]==45) && (resultstr[i+1]==45)) // --
+			|| ((resultstr[i]==33) && (resultstr[i+1]==33)) // !!
+			|| ((resultstr[i]==33) && (resultstr[i+1]==61)) // !=
+			|| ((resultstr[i]==60) && (resultstr[i+1]==60)) // <<
+			|| ((resultstr[i]==60) && (resultstr[i+1]==61)) // <=
+			|| ((resultstr[i]==62) && (resultstr[i+1]==62)) // >>
+			|| ((resultstr[i]==62) && (resultstr[i+1]==61)) // >=
+			|| ((resultstr[i]==38) && (resultstr[i+1]==38)) // &&
+			|| ((resultstr[i]==124) && (resultstr[i+1]==124)) // ||
+			|| ((resultstr[i]==43) && (resultstr[i+1]==61)) // +=
+			|| ((resultstr[i]==45) && (resultstr[i+1]==61)) // -=
+			|| ((resultstr[i]==42) && (resultstr[i+1]==61)) // *=
+			|| ((resultstr[i]==47) && (resultstr[i+1]==61)) // /=
+			|| ((resultstr[i]==37) && (resultstr[i+1]==61)) // %=
+			|| ((resultstr[i]==38) && (resultstr[i+1]==61)) // &=
+			|| ((resultstr[i]==124) && (resultstr[i+1]==61)) // |=
+			|| ((resultstr[i]==94) && (resultstr[i+1]==61)) // ^=
+			|| ((resultstr[i]==45) && (resultstr[i+1]==62)) // ->
+			|| ((resultstr[i]==46) && (resultstr[i+1]==42)) // .*
+			|| ((resultstr[i]==58) && (resultstr[i+1]==58)) // ::
+			|| ((resultstr[i]==63) && (resultstr[i+1]==46)) // ?.
+			|| ((resultstr[i]==63) && (resultstr[i+1]==63)) // ??
+			|| ((resultstr[i]==105) && (resultstr[i+1]==115)) // is
+			|| ((resultstr[i]==97) && (resultstr[i+1]==115)) // as
+			)
+		{
+			allops++;
+			i=i+2;
+			continue;
+		}
+		if ((resultstr[i]==42) // *
+			|| (resultstr[i]==47) // /
+			|| (resultstr[i]==37) // %
+			|| (resultstr[i]==126) // ~ 
+			|| (resultstr[i]==94) // ^
+			|| (resultstr[i]==61) // =
+			|| (resultstr[i]==43) // +
+			|| (resultstr[i]==45) // -
+			|| (resultstr[i]==33) // !
+			|| (resultstr[i]==60) // <
+			|| (resultstr[i]==62) // >
+			|| (resultstr[i]==38) // &
+			|| (resultstr[i]==124) // |
+			|| (resultstr[i]==91) // [
+			|| (resultstr[i]==46) // .
+			|| (resultstr[i]==44) // ,
+			|| (resultstr[i]==40) // ( 			
+			)
+		{
+			allops++;
+			i++;
+			continue;
+		}
+		if ( ( (resultstr[i]==116) && (resultstr[i+1]==104) && (resultstr[i+2]==114) 
+				&& (resultstr[i+3]==111) && (resultstr[i+4]==119) ) //throw
+			)
+		{
+			allops++;
+			i=i+5;
+			continue;
+		}
+		if (((resultstr[i]==100) && (resultstr[i+1]==101) && (resultstr[i+2]==108) 
+				&& (resultstr[i+3]==101) && (resultstr[i+4]==116) && (resultstr[i+4]==101)) //delete
+			|| ( (resultstr[i]==116) && (resultstr[i+1]==121) && (resultstr[i+2]==112) 
+				&& (resultstr[i+3]==101) && (resultstr[i+4]==111) && (resultstr[i+4]==102) ) //typeof
+			|| ( (resultstr[i]==115) && (resultstr[i+1]==105) && (resultstr[i+2]==122) 
+				&& (resultstr[i+3]==101) && (resultstr[i+4]==111) && (resultstr[i+4]==102) ) //sizeof
+			)
+		{
+			allops++;
+			i=i+6;
+			continue;
+		}
+		if ( ( (resultstr[i]==99) && (resultstr[i+1]==104) && (resultstr[i+2]==101) 
+				&& (resultstr[i+3]==99) && (resultstr[i+4]==107) && (resultstr[i+4]==101) 
+				&& (resultstr[i+3]==100) ) //checked
+			)
+		{
+			allops++;
+			i=i+7;
+			continue;
+		}
+		if ( ( (resultstr[i]==100) && (resultstr[i+1]==101) && (resultstr[i]==108) 
+				&& (resultstr[i+1]==101) && (resultstr[i+2]==103) && (resultstr[i+3]==97) 
+				&& (resultstr[i+4]==116) && (resultstr[i+4]==101) ) //delegate
+			)
+		{
+			allops++;
+			i=i+8;
+			continue;
+		}
+		if ( ( (resultstr[i]==117) && (resultstr[i+1]==110) && (resultstr[i]==99) 
+				&& (resultstr[i+1]==104) && (resultstr[i+2]==101) && (resultstr[i+3]==99) 
+				&& (resultstr[i+4]==107) && (resultstr[i+4]==101) && (resultstr[i+3]==100) ) //unchecked
+			)
+		{
+			allops++;
+			i=i+9;
+			continue;
+		}
+		//counting ifs & ?:s
+		if (((resultstr[i]==105) && (resultstr[i+1]==102)) //if
+			|| ( (resultstr[i]==63) && (resultstr[i+1]!=63) && (resultstr[i+1]!=46) 
+				 && (resultstr[i+1]!=91) ) //?:
+			)
+		{
+			allops++;
+			CLabs++;
+			i=i+2;
+			continue;
+		}
+
+		i++;
+
+	}
+
+	float clrel=0;
+	clrel=(float)CLabs/(float)allops;
+
+	//printf("Все операторы=%d \n", allops);
+	printf("Абсолютная сложность программы CL=%d \n", CLabs);
+	printf("Относительная сложность программы cl=%f \n", clrel);
+
+
+
+	//counting insideness
+	int CLI=0;
+	int emptyedges=0;
+	int edges=0;
+	int temp=0;
+	i=0;
+
+	while (i<strlen(resultstr))
+	{
+		//if we found some opening/closing things
+		if (resultstr[i]==123) // {
+		{
+			emptyedges++;
+		}
+		if (resultstr[i]==125) // }
+		{
+			if ( (emptyedges==0) && (edges!=0) )
+			{
+				edges--;
+				temp--;
+			}
+			else
+				emptyedges--;
+		}
+		//if we found if or else
+		if (((resultstr[i]==105) && (resultstr[i+1]==102)) //if
+			|| ( (resultstr[i]==101) && (resultstr[i+1]==108) && (resultstr[i]==115) && (resultstr[i+1]==101) ) //else
+			)
+		{
+			if (edges>0)
+				temp++;
+			while ( (resultstr[i]!=123) && (resultstr[i]!=59) ) // { or ;
+				i++;
+			if (resultstr[i]==123)
+				edges++;
+			if (resultstr[i]==59)
+			{
+				if (temp>CLI)
+					CLI=temp;
+			}
+		}
+		//if we found ?:
+		if (( (resultstr[i]==63) && (resultstr[i+1]!=63) && (resultstr[i+1]!=46) 
+				 && (resultstr[i+1]!=91) ) //?:
+			)
+		{
+			if (edges>0)
+			{
+				temp++;
+				if (temp>CLI)
+					CLI=temp;
+			}
+		}
+		//incrementing if
+		i++;
+	}
+
+	printf("Максимальный уровень вложенности CLI=%d \n", CLI); 
+	//printf("%d   %d", edges, emptyedges);
+
+
+
+	//cleaning up in the end
+	free(sourcestr);
+	free(resultstr);
+
+	_flushall();
+	getchar();
+}
